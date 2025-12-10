@@ -1,4 +1,3 @@
-import bleu from 'bleu-score';
 import { pipeline } from '@xenova/transformers';
 import similarity from 'compute-cosine-similarity';
 
@@ -49,9 +48,57 @@ export function calculateRouge(generated: string, reference: string) {
   };
 }
 
+// BLEU Score Implementation
 export function calculateBleu(generated: string, reference: string) {
-  // bleu-score expects strings
-  return bleu(generated, reference);
+  const sanitize = (text: string) => text.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().split(/\s+/);
+  
+  const cand = sanitize(generated);
+  const ref = sanitize(reference);
+
+  if (cand.length === 0) return 0;
+  if (ref.length === 0) return 0;
+
+  // Calculate precisions for n-grams 1 to 4
+  let logSum = 0;
+  const maxOrder = 4;
+  
+  for (let n = 1; n <= maxOrder; n++) {
+      const counts = new Map<string, number>();
+      
+      // Get counts for candidate n-grams
+      for (let i = 0; i <= cand.length - n; i++) {
+          const ngram = cand.slice(i, i + n).join(' ');
+          counts.set(ngram, (counts.get(ngram) || 0) + 1);
+      }
+      
+      const totalCandNGrams = Math.max(1, cand.length - n + 1);
+
+      // Get max counts for reference n-grams (clipped)
+      let matches = 0;
+      const refCounts = new Map<string, number>();
+      for (let i = 0; i <= ref.length - n; i++) {
+           const ngram = ref.slice(i, i + n).join(' ');
+           refCounts.set(ngram, (refCounts.get(ngram) || 0) + 1);
+      }
+      
+      for (const [ngram, count] of counts) {
+           matches += Math.min(count, refCounts.get(ngram) || 0);
+      }
+      
+      let p_n = matches / totalCandNGrams;
+      if (p_n === 0) {
+          // Smoothing
+          p_n = 1 / (totalCandNGrams + 1);
+      }
+      logSum += Math.log(p_n);
+  }
+
+  // Brevity Penalty
+  const r = ref.length;
+  const c = cand.length;
+  const bp = c > r ? 1 : Math.exp(1 - r / c);
+
+  return bp * Math.exp(logSum / maxOrder);
 }
 
 export async function calculateSemanticScore(generated: string, reference: string) {
