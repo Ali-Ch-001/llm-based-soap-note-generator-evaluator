@@ -10,10 +10,11 @@ This application is a specialized tool for healthcare professionals and develope
 
 - **Multi-Model Support**: Generate notes using OpenAI GPT-4, Google Gemini Pro/Flash (including 1.5), **Locally (T5)**, or **Hugging Face Inference API**.
 - **Comprehensive Evaluation**: Metrics for ROUGE-1, ROUGE-L, BLEU, Semantic Similarity (BERTscore proxy), and Length Ratio.
-- **Comparison Matrix**: Side-by-side table view of cost, tokens, and quality metrics.
-- **Cost & Token Estimation**: Real-time estimates for API usage.
-- **Robust Security**: API Rate Limiting (IP-based) to prevent abuse.
-- **Local Privacy**: Semantic evaluation runs locally/server-side (no data sent to 3rd party for eval).
+- **Comparison Matrix (Phase 2 Upgrade)**: Detailed comparison table with **visual heatmaps** and "Best Response" highlighting.
+- **Cost & Token Estimation**: Real-time estimates for API usage per model.
+- **Robust Security**: In-memory IP-based Rate Limiting to prevent API abuse.
+- **Local Privacy**: Semantic evaluation runs locally/server-side using `transformers.js` (no data leaks).
+- **Premium UI**: Modern glassmorphism design with rich gradients and interactive charts.
 - **Advanced Metrics**:
   - **ROUGE-1**: Measures content overlap (Recall).
   - **BLEU**: Measures n-gram precision.
@@ -28,7 +29,7 @@ This application is a specialized tool for healthcare professionals and develope
 - **Framework**: Next.js 15 (App Router)
 - **Styling**: Tailwind CSS + CLSX
 - **AI Integration**: `openai`, `@google/generative-ai`
-- **Evaluation**: `@xenova/transformers`, `rouge`, `bleu-score`, `compute-cosine-similarity`
+- **Evaluation**: `@xenova/transformers`, `compute-cosine-similarity` (Custom ROUGE/BLEU implementations)
 - **Visuals**: `recharts`, `lucide-react`, `framer-motion`
 
 ---
@@ -95,9 +96,9 @@ Two sample files are included in the root directory for immediate testing:
 
 1.  Upload `sample_transcript.txt`.
 2.  Upload `sample_reference.txt`.
-3.  Select 3 GPT models and 1 Gemini model.
+3.  Select any combination of models (GPT, Gemini, Local, Hugging Face).
 4.  Click **Generate Notes**.
-5.  View the results and the comparison chart.
+5.  View the **Comparison Matrix** to see the winner.
 
 ---
 
@@ -113,6 +114,7 @@ This application is optimized for Vercel.
 4.  **Important**: Add Environment Variables in the Vercel Project Settings:
     - `GEMINI_API_KEY`
     - `OPENAI_API_KEY`
+    - `HF_TOKEN`
 5.  Deploy.
     - _Note_: The first build might take a moment as it optimizes the transformers library.
     - _Note_: `@xenova/transformers` runs in a serverless environment but may experience cold starts.
