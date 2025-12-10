@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LLM-Based SOAP Note Generator & Evaluator
+
+## Project Overview
+
+This application is a specialized tool for healthcare professionals and developers to experiment with GenAI in clinical documentation. It generates SOAP (Subjective, Objective, Assessment, Plan) notes from patient transcripts using multiple Large Language Models (LLMs) simultaneously and evaluates their quality against a "Gold Standard" reference note.
+
+**Live Assessment Purpose**: To demonstrate proficiency in Next.js, API Integration (OpenAI/Gemini), and Advanced Evaluation Techniques (Semantic Similarity/Embeddings).
+
+![Application UI](https://placehold.co/1000x500?text=SOAP+Generator+Dashboard)
+
+## Features
+
+- **Multi-Model Support**: Generate notes using OpenAI GPT-4, Google Gemini Pro/Flash (including 1.5), **Locally (T5)**, or **Hugging Face Inference API**.
+- **Comprehensive Evaluation**: Metrics for ROUGE-1, ROUGE-L, BLEU, Semantic Similarity (BERTscore proxy), and Length Ratio.
+- **Comparison Matrix**: Side-by-side table view of cost, tokens, and quality metrics.
+- **Cost & Token Estimation**: Real-time estimates for API usage.
+- **Robust Security**: API Rate Limiting (IP-based) to prevent abuse.
+- **Local Privacy**: Semantic evaluation runs locally/server-side (no data sent to 3rd party for eval).
+- **Advanced Metrics**:
+  - **ROUGE-1**: Measures content overlap (Recall).
+  - **BLEU**: Measures n-gram precision.
+  - **Semantic Similarity**: Uses `Xenova/all-MiniLM-L6-v2` embeddings to measure meaning preservation (BERTscore proxy), ensuring the _intent_ of the note is correct even if wording differs.
+- **Interactive Visualizations**: Comparison charts powered by Recharts.
+- **Drag-and-Drop Interface**: Easy file uploads for transcripts and reference notes.
+
+---
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS + CLSX
+- **AI Integration**: `openai`, `@google/generative-ai`
+- **Evaluation**: `@xenova/transformers`, `rouge`, `bleu-score`, `compute-cosine-similarity`
+- **Visuals**: `recharts`, `lucide-react`, `framer-motion`
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18.17 or later
+- npm or yarn
+- API Keys for OpenAI (Optional) and Google Gemini (Required)
+
+### Local Installation
+
+1.  **Clone the repository**:
+
+    ```bash
+    git clone <repository-url>
+    cd llm-based-soap-note-generator-evaluator
+    ```
+
+2.  **Install dependencies**:
+
+    ```bash
+    npm install
+    ```
+
+3.  **Setup Environment Variables**:
+    Create a `.env.local` file in the root:
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    Populate it:
+
+    ```env
+    - `OPENAI_API_KEY`: For OpenAI GPT models (Optional)
+    ```
+
+- `GEMINI_API_KEY`: For Google Gemini models (Required for Gemini)
+- `HF_TOKEN`: For Hugging Face Inference API models (Required for HF Free Inference)
+
+Example `.env.local`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=AI...
+HF_TOKEN=hf_...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+    Visit `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Testing the App
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Two sample files are included in the root directory for immediate testing:
 
-## Learn More
+- `sample_transcript.txt`: A conversation between a doctor and patient.
+- `sample_reference.txt`: The reference SOAP note for that encounter.
 
-To learn more about Next.js, take a look at the following resources:
+1.  Upload `sample_transcript.txt`.
+2.  Upload `sample_reference.txt`.
+3.  Select 3 GPT models and 1 Gemini model.
+4.  Click **Generate Notes**.
+5.  View the results and the comparison chart.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+### Option A: Vercel (Preferred)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This application is optimized for Vercel.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  Push code to GitHub.
+2.  Create a new project on [Vercel](https://vercel.com).
+3.  Import your repository.
+4.  **Important**: Add Environment Variables in the Vercel Project Settings:
+    - `GEMINI_API_KEY`
+    - `OPENAI_API_KEY`
+5.  Deploy.
+    - _Note_: The first build might take a moment as it optimizes the transformers library.
+    - _Note_: `@xenova/transformers` runs in a serverless environment but may experience cold starts.
+
+### Option B: Local / Docker
+
+You can build and run locally for production:
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## Design Considerations & Limitations
+
+- **Free Tier Constraints**:
+  - OpenAI API has strict rate limits on free tiers. The app handles errors gracefully but requests may fail if limits are exceeded.
+  - Gemini Free Tier has limits (e.g., 60 RPM).
+- **Evaluation Performance**:
+  - Semantic similarity uses a small, quantized model (`all-MiniLM-L6-v2`) suitable for browser/serverless usage (~30MB). It is a tradeoff between speed and accuracy compared to full BERT models.
+- **Next.js 15 & Types**:
+  - Some legacy libraries (`rouge`, `bleu-score`) lack Typescript definitions, so custom `d.ts` files were added.
+  - Next.js Server Actions were avoided for generation to allow for easier streaming implementation in the future (currently using Route Handlers).
+
+## Licensing
+
+This project is open-source under the MIT License.
