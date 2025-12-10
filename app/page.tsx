@@ -85,10 +85,11 @@ export default function Home() {
                 : r
             ));
 
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
             setResults(prev => prev.map(r => 
                 r.modelName === model 
-                ? { ...r, loading: false, error: err.message } 
+                ? { ...r, loading: false, error: errorMessage } 
                 : r
             ));
         }
@@ -111,7 +112,7 @@ export default function Home() {
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
             <div>
                 <h1 className="text-4xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight">
-                    <div className="p-2.5 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl text-white shadow-lg shadow-teal-500/20">
+                    <div className="p-2.5 bg-linear-to-br from-teal-500 to-emerald-600 rounded-xl text-white shadow-lg shadow-teal-500/20">
                         <Stethoscope className="w-8 h-8" />
                     </div>
                     SOAP Note AI
@@ -166,7 +167,7 @@ export default function Home() {
                             disabled={!canGenerate || isGenerating}
                             className={cn(
                                 "flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white transition-all shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
-                                canGenerate ? "bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500" : "bg-slate-300 text-slate-500"
+                                canGenerate ? "bg-linear-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500" : "bg-slate-300 text-slate-500"
                             )}
                         >
                             {isGenerating ? (

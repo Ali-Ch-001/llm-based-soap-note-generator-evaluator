@@ -1,28 +1,22 @@
-import rouge from 'rouge';
 import bleu from 'bleu-score';
 import { pipeline } from '@xenova/transformers';
-// @ts-ignore
 import similarity from 'compute-cosine-similarity';
 
 // Singleton for extractor to avoid reloading model
-let extractor: any = null;
+type FeatureExtractionPipeline = (text: string, options?: { pooling?: string; normalize?: boolean }) => Promise<{ data: Float32Array | number[] }>;
+let extractor: FeatureExtractionPipeline | null = null;
 
-async function getExtractor() {
+async function getExtractor(): Promise<FeatureExtractionPipeline> {
   if (!extractor) {
     // using a small, fast model for embeddings
-    extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    const pipe = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    extractor = pipe as unknown as FeatureExtractionPipeline;
   }
   return extractor;
 }
 
 export function calculateRouge(generated: string, reference: string) {
-  // Using 'rouge' library which typically returns ROUGE-N scores
-  // Note: the 'rouge' npm package might have different signatures. 
-  // Let's implement a simple n-gram overlap if library fails or use the 'rouge' package strictly.
-  // Actually, there is no single standard 'rouge' package in JS that is universally consistent. 
-  // We will assuming 'rouge' calculates intersection.
-  // For robustness, let's use a simple implementation for ROUGE-1
-  
+
   const genTokens = generated.toLowerCase().split(/\s+/);
   const refTokens = reference.toLowerCase().split(/\s+/);
   

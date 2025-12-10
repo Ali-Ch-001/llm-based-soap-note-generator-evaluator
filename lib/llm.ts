@@ -21,16 +21,6 @@ const getOpenAI = () => {
   return new OpenAI({ apiKey });
 };
 
-// Initialize HF Client (using OpenAI SDK compatible endpoint)
-const getHuggingFace = () => {
-    const apiKey = process.env.HF_TOKEN; 
-    if (!apiKey) throw new Error("HF_TOKEN is not set");
-    return new OpenAI({
-        baseURL: "https://router.huggingface.co/v1",
-        apiKey: apiKey
-    });
-}
-
 // Initialize Gemini
 const getGemini = () => {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -76,18 +66,46 @@ Output ONLY the SOAP note content.`;
 
 export async function generateWithHF(model: string, transcript: string) {
     try {
-        const client = getHuggingFace();
+        const apiKey = process.env.HF_TOKEN;
+        if (!apiKey) throw new Error("HF_TOKEN is not set in environment variables.");
+
         const prompt = `Generate a SOAP note based on the following clinical transcript:\n\n<TRANSCRIPT>\n${transcript}\n</TRANSCRIPT>\n\nOutput ONLY the SOAP note content.`;
         
-        const completion = await client.chat.completions.create({
-            model: model, // e.g. "HuggingFaceTB/SmolLM3-3B:hf-inference"
-            messages: [
-                { role: "user", content: prompt }
-            ],
-            max_tokens: 500, // Reasonable limit for free inference
+        // Use direct fetch to bypass potential OpenAI SDK validation quirks or URL issues
+        const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [
+                    { role: "user", content: prompt }
+                ],
+                max_tokens: 500,
+                stream: false
+            })
         });
 
-        return completion.choices[0]?.message?.content || "No output generated from HF.";
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`HF API Error (${response.status}):`, errorText);
+            
+            // Handle specific HF errors
+            if (response.status === 405) {
+               throw new Error(`HF Method Not Allowed (405). The model ${model} might not support the Inference API or the Router endpoint.`);
+            }
+            if (response.status === 429) {
+                throw new Error("HF Rate Limit Exceeded. Please try again later.");
+            }
+            
+            throw new Error(`HF Error ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "No output generated from HF.";
+
     } catch (error: any) {
         console.error("HF Generation Error:", error);
         throw new Error(error.message || "Failed to generate with Hugging Face");

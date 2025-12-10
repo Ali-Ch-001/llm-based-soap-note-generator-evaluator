@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
-import { Check, AlertCircle, Copy, Bot, Download, FileJson, Trophy, Medal } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { AlertCircle, Copy, Bot, FileJson, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { estimateCost, estimateTokens } from '@/lib/billing';
 
@@ -226,7 +226,7 @@ export function ResultsDashboard({ results, referenceNote }: ResultsDashboardPro
                         </div>
                     ) : result.error ? (
                         <div className="flex items-center gap-2 text-red-500 bg-red-50 p-4 rounded-lg">
-                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                            <AlertCircle className="w-5 h-5 shrink-0" />
                             <p>{result.error}</p>
                         </div>
                     ) : (
