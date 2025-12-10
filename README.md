@@ -6,8 +6,6 @@ This application is a specialized tool for healthcare professionals and develope
 
 **Live Assessment Purpose**: To demonstrate proficiency in Next.js, API Integration (OpenAI/Gemini), and Advanced Evaluation Techniques (Semantic Similarity/Embeddings).
 
-![Application UI](https://placehold.co/1000x500?text=SOAP+Generator+Dashboard)
-
 ## Features
 
 - **Multi-Model Support**: Generate notes using OpenAI GPT-4, Google Gemini Pro/Flash (including 1.5), **Locally (T5)**, or **Hugging Face Inference API**.
